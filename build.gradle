@@ -5,7 +5,7 @@ plugins {
     id "edu.wpi.first.GradleRIO" version "2019.4.1"
 }
 
-def ROBOT_MAIN_CLASS = "com.team254.frc2019.Main"
+def ROBOT_MAIN_CLASS = "com.team1806.frc2019.Main"
 
 // Define my targets (RoboRIO) and artifacts (deployable files)
 // This is added by GradleRIO's backing project EmbeddedTools.
@@ -55,6 +55,7 @@ dependencies {
     compile 'gov.nist.math:jama:1.0.3'
     testCompile 'junit:junit:4.12'
     testCompile 'org.hamcrest:hamcrest:2.1'
+    compile 'org.reflections:reflections:0.9.11'
 }
 
 // Setting up my Jar File. In this case, adding all libraries into the main jar ('fat jar')
