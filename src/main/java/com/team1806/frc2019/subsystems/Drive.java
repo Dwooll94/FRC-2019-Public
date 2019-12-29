@@ -52,6 +52,17 @@ public class Drive extends Subsystem {
     private Rotation2d mGyroOffset = Rotation2d.identity();
     private double mLastDriveCurrentSwitchTime = -1;
 
+    //timing
+    private double currentTimeStamp;
+	private double lastTimeStamp;
+
+    //drive to stall variables
+	boolean wasPushing = false;
+	boolean startingPush = false;
+	boolean finishingPush = false;
+	boolean isTimedOut = false;
+	double pushTimeStamp = 0;
+
     public synchronized static Drive getInstance() {
         if (mInstance == null) {
             mInstance = new Drive();
@@ -196,6 +207,8 @@ public class Drive extends Subsystem {
             @Override
             public void onLoop(double timestamp) {
                 synchronized (Drive.this) {
+                    lastTimeStamp = currentTimeStamp;
+                    currentTimeStamp = timestamp;
                     handleFaults();
                     switch (mDriveControlState) {
                         case OPEN_LOOP:
@@ -204,6 +217,12 @@ public class Drive extends Subsystem {
                             if (mPathFollower != null) {
                                 updatePathFollower(timestamp);
                             }
+                            break;
+                        case DRIVE_TO_STALL:
+                            mPeriodicIO.left_demand = Constants.kStallPower;
+                            mPeriodicIO.right_demand = Constants.kStallPower;
+                            mPeriodicIO.left_feedforward = 0.0;
+                            mPeriodicIO.right_feedforward = 0.0;
                             break;
                         default:
                             System.out.println("unexpected drive control state: " + mDriveControlState);
@@ -538,6 +557,7 @@ public class Drive extends Subsystem {
     public enum DriveControlState {
         OPEN_LOOP, // open loop voltage control
         PATH_FOLLOWING, // velocity PID control
+        DRIVE_TO_STALL,
     }
 
     public enum DriveCurrentLimitState {
@@ -638,4 +658,60 @@ public class Drive extends Subsystem {
     public synchronized double getTimestamp() {
         return mPeriodicIO.timestamp;
     }
+
+    public synchronized boolean driveToStall(boolean pushReq, boolean stopReq) {
+		startingPush = pushReq && !wasPushing;
+
+
+		if(startingPush) {
+			System.out.println("starting push");
+            mDriveControlState = DriveControlState.DRIVE_TO_STALL;
+            mPeriodicIO.left_demand = Constants.kStallPower;
+            mPeriodicIO.right_demand = Constants.kStallPower;
+			pushTimeStamp = currentTimeStamp;
+        }
+        double leftVelocity = getLeftVelocityInchesPerSec();
+        double rightVelocity = getRightVelocityInchesPerSec();
+
+		isTimedOut = (currentTimeStamp - pushTimeStamp > Constants.kStallTimeout);
+		finishingPush = (leftVelocity < Constants.kStallSpeed && rightVelocity < Constants.kStallSpeed && currentTimeStamp - pushTimeStamp > Constants.kStallWaitPeriod) || isTimedOut || stopReq;
+		wasPushing = pushReq;
+		if(leftVelocity < Constants.kStallSpeed && mDriveControlState == DriveControlState.DRIVE_TO_STALL) {
+			System.out.println("time to stall " + (currentTimeStamp - pushTimeStamp));
+		}
+
+		if(finishingPush && mDriveControlState == DriveControlState.DRIVE_TO_STALL) {
+			System.out.println("finishing push");
+			System.out.println("speed low? " + (leftVelocity < Constants.kStallSpeed ));
+			System.out.println("wait period? " + (currentTimeStamp - pushTimeStamp > Constants.kStallWaitPeriod));
+			System.out.println("is timed out? " + isTimedOut);
+			mDriveControlState = DriveControlState.OPEN_LOOP;
+			pushTimeStamp = 0;
+            mPeriodicIO.left_demand = 0;
+            mPeriodicIO.right_demand = 0;
+			return true;
+		}
+		return false;
+
+	}
+
+    public float getWorldLinearAccelX() {
+		return mNavx.getWorldLinearAccelX();
+	}
+
+	public float getWorldLinearAccelY() {
+		return mNavx.getWorldLinearAccelY();
+	}
+
+	public float getWorldLinearAccelZ() {
+		return mNavx.getWorldLinearAccelZ();
+    }
+
+    public double getLeftVelocityInchesPerSec() {
+        return mLeftEncoder.getRate();
+	}
+    
+    public double getRightVelocityInchesPerSec() {
+		return mRightEncoder.getRate();
+	}
 }

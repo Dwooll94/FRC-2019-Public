@@ -54,6 +54,10 @@ public class XboxController {
         mController.setRumble(RumbleType.kRightRumble, on ? 1 : 0);
     }
 
+    public void setRumble(RumbleType rumbleType, double power) {
+        mController.setRumble(rumbleType, power);
+    }
+
     private double handleDeadband(double value, double deadband) {
         return (Math.abs(value) > Math.abs(deadband)) ? value : 0;
     }

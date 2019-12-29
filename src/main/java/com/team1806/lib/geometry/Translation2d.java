@@ -159,4 +159,8 @@ public class Translation2d implements ITranslation2d<Translation2d> {
     public Translation2d getTranslation() {
         return this;
     }
+
+    public Translation2d subtract(Translation2d other) {
+    	return new Translation2d(x_ - other.x(), y_ - other.y());
+    }
 }

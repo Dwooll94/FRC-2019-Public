@@ -40,6 +40,14 @@ public class Constants {
 
     public static final double kBumperHeight = 6.6 + 2.0; // inches to ground + 2 in buffer
 
+    public static final double kCollisionJerkThreshold = 1.0;
+    
+    //driveToStall
+    public final static double kStallTimeout = 2;
+    public final static double kStallWaitPeriod = .3;
+    public final static double kStallSpeed = 500;
+    public final static double kStallPower = .15;
+
 
     //Camera
     public static final double kCameraFrameRate = 60.0;
