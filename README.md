@@ -35,13 +35,8 @@ The code is divided into several packages, each responsible for a different aspe
 
     To control autonomous driving, the robot utilizes an [adaptive pure pursuit controller](src/main/java/com/team1806/lib/control/AdaptivePurePursuitController.java) to control steering and a custom trapezoidal motion profile [generator](src/main/java/com/team1806/lib/motion/MotionProfileGenerator.java) and [follower](src/main/java/com/team1806/lib/motion/ProfileFollower.java) to control velocity.
 
-* Motion planner that constrains superstructure motion to within the frame perimeter
-
-    To keep the superstructure within the frame perimeter during movements that may be dangerous, the robot follows a [tuck motion planner](src/main/java/com/team1806/frc2019/planners/TuckPlanner.java), named because it tucks the wrist down before moving the rest of the superstructure, until it is safe to untuck.
-
-* Limelight-based vision system for target detection
-
-    The robot used 2 Limelights, toggled through a [manager class](src/main/java/com/team1806/frc2019/subsystems/LimelightManager.java), to find and track vision targets. Information about targets were used to [auto steer](src/main/java/com/team1806/frc2019/subsystems/Drive.java#L303-L322) the robot towards vision targets through a P feedback loop, which was used mainly for driving to the loading station, or to [auto aim the turret](src/main/java/com/team1806/frc2019/subsystems/Superstructure.java#L256-L310) for scoring on the rockets and cargo ship.
+* Path generation for vision targets.
+	Can generate a path on the fly to drive to a vision target automatically.
 
 ## Package Functions
 - [`com.team1806.frc2019`](src/main/java/com/team1806/frc2019)
